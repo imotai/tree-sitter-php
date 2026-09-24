@@ -84,4 +84,44 @@ mod tests {
         let root = tree.root_node();
         assert!(!root.has_error());
     }
+
+    fn sequential_heredocs(prefix: &str, count: usize, tag: &str) -> String {
+        let block = format!("$a = <<<{tag}\nx\n{tag};\n");
+        let mut src = String::from(prefix);
+        src.reserve(block.len() * count);
+        for _ in 0..count {
+            src.push_str(&block);
+        }
+        src
+    }
+
+    fn assert_no_error(language: tree_sitter_language::LanguageFn, code: &str) {
+        let mut parser = tree_sitter::Parser::new();
+        parser
+            .set_language(&language.into())
+            .expect("Error loading parser");
+        let tree = parser.parse(code, None).unwrap();
+        assert!(!tree.root_node().has_error());
+    }
+
+    #[test]
+    fn test_many_sequential_heredocs() {
+        let long_tag = "HEREDOC_".repeat(30);
+        assert_no_error(
+            super::LANGUAGE_PHP,
+            &sequential_heredocs("<?php\n", 20, &long_tag),
+        );
+        assert_no_error(
+            super::LANGUAGE_PHP,
+            &sequential_heredocs("<?php\n", 250, "EOD"),
+        );
+        assert_no_error(
+            super::LANGUAGE_PHP_ONLY,
+            &sequential_heredocs("", 20, &long_tag),
+        );
+        assert_no_error(
+            super::LANGUAGE_PHP_ONLY,
+            &sequential_heredocs("", 250, "EOD"),
+        );
+    }
 }

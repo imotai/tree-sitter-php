@@ -88,6 +88,7 @@ static void deserialize(Scanner *scanner, const char *buffer, unsigned length) {
     for (uint32_t i = 0; i < scanner->heredocs.size; i++) {
         reset_heredoc(array_get(&scanner->heredocs, i));
     }
+    array_clear(&scanner->heredocs);
 
     if (length == 0) {
         return;
@@ -95,24 +96,17 @@ static void deserialize(Scanner *scanner, const char *buffer, unsigned length) {
 
     uint8_t open_heredoc_count = buffer[size++];
     for (unsigned i = 0; i < open_heredoc_count; i++) {
-        Heredoc *heredoc = NULL;
-        if (i < scanner->heredocs.size) {
-            heredoc = array_get(&scanner->heredocs, i);
-        } else {
-            Heredoc new_heredoc = heredoc_new();
-            array_push(&scanner->heredocs, new_heredoc);
-            heredoc = array_back(&scanner->heredocs);
-        }
-
-        heredoc->end_word_indentation_allowed = buffer[size++];
-        memcpy(&heredoc->word.size, &buffer[size], sizeof(uint32_t));
+        Heredoc heredoc = heredoc_new();
+        heredoc.end_word_indentation_allowed = buffer[size++];
+        memcpy(&heredoc.word.size, &buffer[size], sizeof(uint32_t));
         size += sizeof(uint32_t);
-        unsigned word_size = heredoc->word.size * sizeof(heredoc->word.contents[0]);
+        unsigned word_size = heredoc.word.size * sizeof(heredoc.word.contents[0]);
         if (word_size > 0) {
-            array_reserve(&heredoc->word, heredoc->word.size);
-            memcpy(heredoc->word.contents, &buffer[size], word_size);
+            array_reserve(&heredoc.word, heredoc.word.size);
+            memcpy(heredoc.word.contents, &buffer[size], word_size);
             size += word_size;
         }
+        array_push(&scanner->heredocs, heredoc);
     }
 
     assert(size == length);
