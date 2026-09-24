@@ -62,6 +62,7 @@ jobs:
           files: |
             examples/**/*.php
           invalid-files: |
-            examples/framework/tests/Foundation/fixtures/bad-syntax-strategy.php
+            examples/framework/tests/Foundation/Fixtures/bad-syntax-strategy.php
+            examples/phpunit/tests/end-to-end/code-coverage/_files/parse-error/src/CannotBeParsed.php
             examples/WordPress/wp-includes/php-compat/readonly.php
             examples/WordPress/wp-includes/class-wp-block-processor.php  
